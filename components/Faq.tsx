@@ -1,87 +1,91 @@
 "use client";
-import React, { useState } from "react";
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 
 const faqs = [
   {
     question: "Как происходит процесс заказа услуги?",
     answer:
-      "Процесс заказа очень прост: выберите нужную услугу, добавьте необходимую информацию и подтвердите заказ. Наш курьер приедет в удобное время, чтобы забрать обувь, и доставит её обратно после выполнения работ.",
+      "Процесс заказа очень прост: выберите нужную услугу, укажите адрес и удобное время для визита курьера. Наш специалист заберет обувь, а после выполнения работ доставит её обратно. Вы можете отслеживать статус заказа в личном кабинете.",
   },
   {
-    question: "Какой гарантийный срок предоставляется на выполненные работы?",
+    question: "Какой гарантийный срок на ремонт?",
     answer:
-      "Мы предоставляем гарантию на все выполненные работы в течение 30 дней. Если у вас возникнут вопросы, свяжитесь с нами, и мы оперативно решим вашу проблему.",
+      "Мы предоставляем гарантию 30 дней на все виды ремонтных работ. Если в течение этого срока возникнут проблемы с качеством ремонта, мы бесплатно устраним все недостатки.",
   },
   {
-    question: "Как быстро я получу свою обувь обратно?",
+    question: "Сколько времени занимает ремонт?",
     answer:
-      "Стандартное время выполнения заказа составляет от 2 до 5 рабочих дней, в зависимости от типа работы и загруженности. О срочных заказах мы информируем дополнительно.",
+      "Стандартное время выполнения заказа составляет 2-5 рабочих дней. Срочный ремонт может быть выполнен за 24 часа с дополнительной платой. Точные сроки зависят от сложности работ и загруженности мастеров.",
   },
   {
-    question: "Какие материалы вы используете для ремонта?",
+    question: "Какие материалы используются при ремонте?",
     answer:
-      "Мы используем только высококачественные материалы, которые помогают продлить срок службы вашей обуви и сохранить её внешний вид.",
+      "Мы работаем только с проверенными поставщиками и используем высококачественные материалы ведущих производителей. Это гарантирует долговечность ремонта и сохранение внешнего вида обуви.",
+  },
+  {
+    question: "Есть ли доставка за пределы города?",
+    answer:
+      "Да, мы осуществляем доставку в пригород и ближайшие населенные пункты. Стоимость доставки зависит от удаленности. Точную цену вы можете узнать при оформлении заказа.",
   },
 ];
 
-const Faq: React.FC = () => {
+const Faq = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  const toggleAccordion = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
-  };
-
   return (
-    <section className="py-24">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-16 text-center">
-          <h2 className="text-4xl font-manrope font-bold text-gray-900 leading-[3.25rem]">
+    <section className="py-24 bg-white">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <h2 className="text-3xl sm:text-4xl font-semibold text-secondary">
             Часто задаваемые вопросы
           </h2>
+          <p className="mt-4 text-xl text-gray-light">
+            Всё, что нужно знать о нашем сервисе
+          </p>
         </div>
 
-        <div className="accordion-group">
+        <div className="mt-12 space-y-4">
           {faqs.map((faq, index) => (
             <div
               key={index}
-              className={`accordion py-8 px-6 border-b border-solid border-gray-200 transition-all duration-500 rounded-2xl hover:bg-indigo-50 ${
-                openIndex === index ? "bg-indigo-50" : ""
-              }`}
-              onClick={() => toggleAccordion(index)}
+              className="border border-border-color rounded-xl overflow-hidden"
             >
               <button
-                className="accordion-toggle group inline-flex items-center justify-between leading-8 text-gray-900 w-full transition duration-500 text-left hover:text-indigo-600"
-                aria-controls={`faq-${index}`}
+                className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-lighter transition-colors"
+                onClick={() => setOpenIndex(openIndex === index ? null : index)}
               >
-                <h5 className="font-medium text-lg">{faq.question}</h5>
-                <svg
-                  className={`w-6 h-6 text-gray-500 transition-transform duration-500 ${
-                    openIndex === index ? "rotate-180 text-indigo-600" : ""
+                <span className="text-lg font-medium text-secondary">
+                  {faq.question}
+                </span>
+                <ChevronDown
+                  className={`w-5 h-5 text-gray-light transition-transform duration-200 ${
+                    openIndex === index ? "rotate-180" : ""
                   }`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                />
               </button>
+
               <div
-                id={`faq-${index}`}
-                className={`accordion-content w-full px-0 overflow-hidden transition-max-height duration-500 ${
-                  openIndex === index ? "max-h-screen" : "max-h-0"
+                className={`overflow-hidden transition-all duration-200 ${
+                  openIndex === index ? "max-h-96" : "max-h-0"
                 }`}
               >
-                <p className="text-base text-gray-900 leading-6 mt-4">
-                  {faq.answer}
-                </p>
+                <div className="px-6 pb-4 text-gray-light">{faq.answer}</div>
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Дополнительная секция поддержки */}
+        <div className="mt-12 text-center">
+          <p className="text-gray-light">Не нашли ответ на свой вопрос?</p>
+          <a
+            href="#contact"
+            className="mt-4 inline-flex items-center text-primary hover:text-primary-dark font-medium"
+          >
+            Свяжитесь с нами
+            <ChevronDown className="w-4 h-4 ml-1 rotate-[-90deg]" />
+          </a>
         </div>
       </div>
     </section>

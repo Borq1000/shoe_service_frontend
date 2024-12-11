@@ -120,21 +120,40 @@ const NavBar: FC = () => {
                   Заказы
                 </Link>
 
-                {userProfile?.image ? (
-                  <Image
-                    src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${userProfile.image}`}
-                    alt="Фото профиля"
-                    width={32}
-                    height={32}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-secondary font-medium">
-                      {session?.user?.email?.[0].toUpperCase()}
-                    </span>
+                {/* Профиль */}
+                <div className="relative group">
+                  <button className="flex items-center gap-2 p-1.5 rounded-full hover:ring-2 hover:ring-border-color transition-all">
+                    <div className="w-9 h-9 rounded-full overflow-hidden shadow-[0_3px_10px_rgb(0,0,0,0.12)] hover:shadow-[0_3px_12px_rgb(0,0,0,0.2)] transition-shadow">
+                      {userProfile?.image ? (
+                        <Image
+                          src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${userProfile.image}`}
+                          alt="Фото профиля"
+                          width={36}
+                          height={36}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-lighter flex items-center justify-center">
+                          <span className="text-secondary font-medium">
+                            {session?.user?.email?.[0].toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+
+                  {/* Выпадающее меню */}
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-card border border-border-color opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                    <div className="py-2">
+                      <button
+                        onClick={() => signOut()}
+                        className="w-full px-4 py-2 text-left text-secondary hover:bg-gray-lighter transition-colors"
+                      >
+                        Выйти
+                      </button>
+                    </div>
                   </div>
-                )}
+                </div>
               </>
             ) : (
               <Link href="/login" className="btn-primary">

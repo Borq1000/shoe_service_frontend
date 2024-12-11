@@ -15,7 +15,7 @@ interface Order {
   street: string;
   building_num?: string;
   comment?: string;
-  image?: string;
+  image: string | null;
   created_at: string;
   service_details: {
     name: string;
@@ -30,22 +30,34 @@ async function fetchOrders() {
     return null;
   }
 
-  const response = await fetch(
-    "http://127.0.0.1:8000/api/orders/client/orders/",
-    {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-      },
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/orders/client/orders/`,
+      {
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          Accept: "application/json",
+        },
+        cache: "no-store",
+      }
+    );
+
+    if (!response.ok) {
+      console.error("Ошибка загрузки заказов:", {
+        status: response.status,
+        statusText: response.statusText,
+      });
+      const errorText = await response.text();
+      console.error("Текст ошибки:", errorText);
+      return []; // Возвращаем пустой массив вместо выброса ошибки
     }
-  );
 
-  if (!response.ok) {
-    console.error("Ошибка загрузки заказов:", response);
-    throw new Error("Не удалось загрузить заказы");
+    const data = await response.json();
+    return data.results || []; // Возвращаем results или пустой массив, если results нет
+  } catch (error) {
+    console.error("Ошибка загрузки заказов:", error);
+    return []; // Возвращаем пустой массив в случае ошибки
   }
-
-  const data = await response.json();
-  return data.results as Order[];
 }
 
 const statusMapping = {

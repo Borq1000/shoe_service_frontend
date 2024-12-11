@@ -1,59 +1,94 @@
 import { FC } from "react";
-import { FiTruck, FiCheckCircle, FiUser, FiShoppingCart } from "react-icons/fi";
+import {
+  RiShieldStarLine,
+  RiTruckLine,
+  RiTeamLine,
+  RiSmartphoneLine,
+} from "react-icons/ri";
 
 const Features: FC = () => {
   const features = [
     {
-      title: "Высокое качество ремонта",
+      title: "Высокое качество",
       description:
-        "Наши мастера гарантируют высокое качество ремонта с использованием современных материалов.",
-      icon: FiCheckCircle, // Иконка для качества
+        "Профессиональный ремонт с использованием премиальных материалов и современных технологий",
+      icon: RiShieldStarLine,
     },
     {
       title: "Удобная доставка",
       description:
-        "Мы организуем быструю и удобную доставку вашей обуви на ремонт и обратно.",
-      icon: FiTruck, // Иконка для доставки
+        "Бесплатный вызов курьера в удобное для вас время. Доставка в обе стороны",
+      icon: RiTruckLine,
     },
     {
-      title: "Опытные специалисты",
+      title: "Опытные мастера",
       description:
-        "Наша команда состоит из опытных профессионалов с многолетним опытом работы.",
-      icon: FiUser, // Иконка для специалистов
+        "Команда профессионалов с многолетним опытом работы и любовью к своему делу",
+      icon: RiTeamLine,
     },
     {
-      title: "Простота заказа",
+      title: "Простой заказ",
       description:
-        "Легко оформляйте заказы через наше приложение или веб-сайт за несколько кликов.",
-      icon: FiShoppingCart, // Иконка для заказа
+        "Оформление заказа за пару кликов через приложение или сайт. Отслеживание статуса",
+      icon: RiSmartphoneLine,
     },
   ];
 
   return (
-    <section className="py-12 bg-gray-50">
-      <div className="container mx-auto text-center p-6">
-        <h2 className="text-3xl font-semibold text-gray-800">
-          Наши преимущества
-        </h2>
-        <p className="mt-4 text-gray-600">
-          Мы предлагаем уникальные услуги для вашего удобства и комфорта
-        </p>
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className="p-6 bg-white shadow-md rounded-lg hover:shadow-lg transition-shadow duration-300"
-            >
-              <div className="flex flex-col items-center mb-4">
-                <feature.icon className="text-[#EF0000] h-12 w-12 mb-4" />{" "}
-                {/* Иконка увеличена и размещена сверху */}
-                <h3 className="text-xl font-semibold text-gray-800">
-                  {feature.title}
-                </h3>
+    <section className="py-24 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center max-w-3xl mx-auto">
+          <h2 className="text-3xl sm:text-4xl font-semibold text-secondary">
+            Почему выбирают нас
+          </h2>
+          <p className="mt-4 text-xl text-gray-light">
+            Мы создали сервис, в котором учли все потребности наших клиентов
+          </p>
+        </div>
+
+        <div className="mt-20">
+          <div className="grid grid-cols-1 gap-y-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-x-8 lg:gap-y-0">
+            {features.map((feature, index) => (
+              <div key={index} className="relative group">
+                {/* Декоративная линия между элементами */}
+                {index < features.length - 1 && (
+                  <div className="hidden lg:block absolute right-0 top-1/2 w-full border-t border-border-color -translate-y-1/2" />
+                )}
+
+                <div className="relative flex flex-col items-center">
+                  {/* Иконка */}
+                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                    <feature.icon className="w-8 h-8 text-primary" />
+                  </div>
+
+                  {/* Номер шага */}
+                  <div className="absolute top-0 right-0 -translate-y-1/3 translate-x-1/3 flex items-center justify-center w-8 h-8 rounded-full bg-white border-2 border-primary text-primary font-semibold text-sm">
+                    {index + 1}
+                  </div>
+
+                  {/* Текст */}
+                  <div className="mt-6 text-center">
+                    <h3 className="text-xl font-semibold text-secondary">
+                      {feature.title}
+                    </h3>
+                    <p className="mt-2 text-gray-light">
+                      {feature.description}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <p className="text-gray-600">{feature.description}</p>
-            </div>
-          ))}
+            ))}
+          </div>
+        </div>
+
+        {/* Дополнительная информация */}
+        <div className="mt-20 text-center">
+          <a
+            href="#services"
+            className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-primary hover:bg-primary-dark transition-colors"
+          >
+            Попробовать сейчас
+          </a>
         </div>
       </div>
     </section>

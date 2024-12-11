@@ -6,14 +6,14 @@ import CityAutocomplete from "@/components/CityAutocomplete";
 import StreetAutocomplete from "@/components/StreetAutocomplete";
 import { useSession } from "next-auth/react";
 import {
-  MapPin,
-  Upload,
   Building2,
   Building,
-  Stairs,
+  ArrowUpSquare,
   Home,
   MessageSquare,
+  Upload,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type Service = {
   id: number;
@@ -30,6 +30,7 @@ interface ServicePageProps {
 
 const ServicePage: React.FC<ServicePageProps> = ({ params }) => {
   const { data: session } = useSession();
+  const router = useRouter();
   const { slug } = params;
 
   const [service, setService] = useState<Service | null>(null);
@@ -58,10 +59,11 @@ const ServicePage: React.FC<ServicePageProps> = ({ params }) => {
 
       try {
         const response = await fetch(
-          `http://127.0.0.1:8000/api/services/services/${slug}`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/services/services/${slug}/`,
           {
             headers: {
               Authorization: `Bearer ${session?.accessToken}`,
+              Accept: "application/json",
             },
           }
         );
@@ -106,9 +108,17 @@ const ServicePage: React.FC<ServicePageProps> = ({ params }) => {
     event.preventDefault();
     setOrderError(false);
 
-    const formData = new FormData(event.currentTarget);
+    if (!service) {
+      setOrderError(true);
+      return;
+    }
 
-    // Добавление недостающих полей
+    const formData = new FormData();
+
+    // Добавляем ID услуги
+    formData.append("service", service.id.toString());
+
+    // Добавление остальных полей
     formData.append("city", city);
     formData.append("street", street);
     formData.append("building_num", buildingNum || "");
@@ -125,9 +135,31 @@ const ServicePage: React.FC<ServicePageProps> = ({ params }) => {
     }
 
     try {
-      await handleOrder(formData);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/orders/client/orders/`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create order");
+      }
+
+      const data = await response.json();
       setOrderSuccess(true);
       setOrderError(false);
+
+      // Добавляем небольшую задержку перед редиректом
+      setTimeout(() => {
+        router.push("/orders");
+        router.refresh(); // Принудительно обновляем страницу заказов
+      }, 1500);
     } catch (error) {
       console.error("Failed to create order:", error);
       setOrderError(true);
@@ -225,7 +257,7 @@ const ServicePage: React.FC<ServicePageProps> = ({ params }) => {
                       Этаж
                     </label>
                     <div className="relative">
-                      <Stairs className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-light" />
+                      <ArrowUpSquare className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-light" />
                       <input
                         type="text"
                         value={floor}
