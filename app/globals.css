@@ -1,3 +1,65 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  /* Основные цвета Airbnb */
+  --primary: #ff385c;
+  --primary-dark: #e31c5f;
+  --secondary: #222222;
+  --gray-light: #717171;
+  --gray-lighter: #f7f7f7;
+  --border-color: #dddddd;
+}
+
+@layer base {
+  body {
+    @apply text-secondary bg-white;
+  }
+
+  h1 {
+    @apply text-[32px] font-semibold tracking-tight;
+  }
+
+  h2 {
+    @apply text-[22px] font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary hover:bg-primary-dark text-white font-medium py-3 px-6 rounded-lg transition-colors;
+  }
+
+  .btn-secondary {
+    @apply bg-white hover:bg-gray-50 text-secondary border border-secondary font-medium py-3 px-6 rounded-lg transition-colors;
+  }
+
+  .input-primary {
+    @apply w-full px-4 py-3 border border-border-color rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
+  }
+
+  .card {
+    @apply bg-white rounded-xl border border-border-color hover:shadow-lg transition-shadow duration-200;
+  }
+
+  .nav-link {
+    @apply text-secondary hover:text-primary transition-colors;
+  }
+}
+
+/* Airbnb-style анимации */
+.fade-enter {
+  opacity: 0;
+}
+.fade-enter-active {
+  opacity: 1;
+  transition: opacity 200ms ease-in;
+}
+.fade-exit {
+  opacity: 1;
+}
+.fade-exit-active {
+  opacity: 0;
+  transition: opacity 200ms ease-in;
+}

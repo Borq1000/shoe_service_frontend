@@ -1,11 +1,20 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { handleOrder } from "@/actions";
 import CityAutocomplete from "@/components/CityAutocomplete";
 import StreetAutocomplete from "@/components/StreetAutocomplete";
 import { useSession } from "next-auth/react";
+import {
+  MapPin,
+  Upload,
+  Building2,
+  Building,
+  Stairs,
+  Home,
+  MessageSquare,
+} from "lucide-react";
 
-// Тип данных услуги
 type Service = {
   id: number;
   name: string;
@@ -25,7 +34,7 @@ const ServicePage: React.FC<ServicePageProps> = ({ params }) => {
 
   const [service, setService] = useState<Service | null>(null);
   const [orderSuccess, setOrderSuccess] = useState(false);
-  const [orderError, setOrderError] = useState<string | null>(null);
+  const [orderError, setOrderError] = useState(false);
 
   // Поля формы заказа
   const [city, setCity] = useState("Москва");
@@ -38,12 +47,12 @@ const ServicePage: React.FC<ServicePageProps> = ({ params }) => {
   const [apartment, setApartment] = useState("");
   const [comment, setComment] = useState("");
   const [image, setImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  // Получение данных услуги
   useEffect(() => {
     const fetchService = async () => {
       if (!slug) {
-        setOrderError("Slug is missing.");
+        console.error("Slug is undefined or missing");
         return;
       }
 
@@ -56,19 +65,18 @@ const ServicePage: React.FC<ServicePageProps> = ({ params }) => {
             },
           }
         );
-
         if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(
-            `Failed to fetch service data. Status: ${response.status}. ${errorText}`
+          console.error(
+            `Failed to fetch service data. Status: ${
+              response.status
+            }, Text: ${await response.text()}`
           );
+          throw new Error("Failed to fetch service data.");
         }
-
         const data = await response.json();
         setService(data);
-      } catch (error: any) {
+      } catch (error) {
         console.error("Error loading service:", error);
-        setOrderError(error.message || "Failed to load service.");
       }
     };
 
@@ -86,184 +94,270 @@ const ServicePage: React.FC<ServicePageProps> = ({ params }) => {
   };
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files?.[0]) {
-      setImage(event.target.files[0]);
+    const file = event.target.files?.[0];
+    if (file) {
+      setImage(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
     }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setOrderError(null);
-    setOrderSuccess(false);
+    setOrderError(false);
 
-    if (!session?.accessToken) {
-      setOrderError("Необходима авторизация для создания заказа.");
-      return;
+    const formData = new FormData(event.currentTarget);
+
+    // Добавление недостающих полей
+    formData.append("city", city);
+    formData.append("street", street);
+    formData.append("building_num", buildingNum || "");
+    formData.append("building", building || "");
+    formData.append("floor", floor || "");
+    formData.append("apartment", apartment || "");
+    formData.append("latitude", latitude?.toString() || "");
+    formData.append("longitude", longitude?.toString() || "");
+    formData.append("comment", comment);
+
+    // Добавление изображения, если оно выбрано
+    if (image) {
+      formData.append("image", image);
     }
 
     try {
-      const formData = new FormData();
-      formData.append("service", String(service?.id || ""));
-      formData.append("city", city);
-      formData.append("street", street);
-      formData.append("building_num", buildingNum || "");
-      formData.append("building", building || "");
-      formData.append("floor", floor || "");
-      formData.append("apartment", apartment || "");
-      formData.append("latitude", latitude?.toString() || "");
-      formData.append("longitude", longitude?.toString() || "");
-      formData.append("comment", comment);
-      if (image) {
-        formData.append("image", image);
-      }
-
-      const response = await fetch(
-        "http://127.0.0.1:8000/api/orders/client/orders/",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${session.accessToken}`,
-          },
-          body: formData,
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          message: "Failed to create order",
-        }));
-        throw new Error(errorData.message || "Failed to create order.");
-      }
-
+      await handleOrder(formData);
       setOrderSuccess(true);
-    } catch (error: any) {
+      setOrderError(false);
+    } catch (error) {
       console.error("Failed to create order:", error);
-      setOrderError(error.message || "Не удалось создать заказ.");
+      setOrderError(true);
     }
   };
 
-  if (orderError) {
+  if (!service) {
     return (
-      <div className="text-red-600 text-center mt-4">
-        <p>Ошибка: {orderError}</p>
+      <div className="min-h-screen bg-white pt-24 flex items-center justify-center">
+        <div className="text-gray-light text-lg">Загрузка...</div>
       </div>
     );
   }
 
-  if (!service) {
-    return (
-      <p className="text-center text-gray-500">
-        Загрузка информации об услуге...
-      </p>
-    );
-  }
-
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
-        {service.name}
-      </h1>
-      {orderSuccess ? (
-        <div
-          className="bg-green-50 text-green-800 p-6 rounded-lg relative w-full max-w-lg"
-          role="alert"
-        >
-          <strong className="font-bold">Ваш заказ успешно создан!</strong>
-        </div>
-      ) : (
-        <div className="w-full max-w-lg bg-white p-8 rounded-lg shadow-lg">
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label className="block text-gray-700 font-semibold mb-2">
-                Город
-              </label>
-              <CityAutocomplete value={city} onChange={setCity} />
+    <div className="min-h-screen bg-white pt-24 pb-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 className="text-[32px] font-semibold text-secondary mb-8">
+          {service.name}
+        </h1>
+
+        {orderSuccess ? (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+            <h2 className="text-[22px] font-semibold text-green-800 mb-2">
+              Заказ успешно создан!
+            </h2>
+            <p className="text-green-700">
+              Мы свяжемся с вами в ближайшее время для подтверждения заказа.
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Адрес */}
+            <div className="space-y-4">
+              <h2 className="text-[22px] font-semibold text-secondary">
+                Адрес
+              </h2>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-gray-light text-sm mb-2">
+                    Город
+                  </label>
+                  <CityAutocomplete value={city} onChange={setCity} />
+                </div>
+
+                <div>
+                  <label className="block text-gray-light text-sm mb-2">
+                    Улица
+                  </label>
+                  <StreetAutocomplete
+                    city={city}
+                    value={street}
+                    onChange={handleAddressSelection}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-light text-sm mb-2">
+                      Номер дома
+                    </label>
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-light" />
+                      <input
+                        type="text"
+                        value={buildingNum}
+                        onChange={(e) => setBuildingNum(e.target.value)}
+                        className="input-primary pl-10"
+                        placeholder="12"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-light text-sm mb-2">
+                      Корпус
+                    </label>
+                    <div className="relative">
+                      <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-light" />
+                      <input
+                        type="text"
+                        value={building}
+                        onChange={(e) => setBuilding(e.target.value)}
+                        className="input-primary pl-10"
+                        placeholder="1"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-light text-sm mb-2">
+                      Этаж
+                    </label>
+                    <div className="relative">
+                      <Stairs className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-light" />
+                      <input
+                        type="text"
+                        value={floor}
+                        onChange={(e) => setFloor(e.target.value)}
+                        className="input-primary pl-10"
+                        placeholder="3"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-light text-sm mb-2">
+                      Квартира
+                    </label>
+                    <div className="relative">
+                      <Home className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-light" />
+                      <input
+                        type="text"
+                        value={apartment}
+                        onChange={(e) => setApartment(e.target.value)}
+                        className="input-primary pl-10"
+                        placeholder="42"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 font-semibold mb-2">
-                Улица
-              </label>
-              <StreetAutocomplete
-                city={city}
-                value={street}
-                onChange={handleAddressSelection}
-              />
+
+            {/* Комментарий */}
+            <div className="space-y-4">
+              <h2 className="text-[22px] font-semibold text-secondary">
+                Дополнительная информация
+              </h2>
+
+              <div>
+                <label className="block text-gray-light text-sm mb-2">
+                  Комментарий к заказу
+                </label>
+                <div className="relative">
+                  <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-gray-light" />
+                  <textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Опишите особенности вашего заказа"
+                    className="input-primary pl-10 min-h-[100px]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-light text-sm mb-2">
+                  Фотография обуви
+                </label>
+                <div className="relative">
+                  {previewUrl ? (
+                    <div className="relative aspect-video rounded-lg overflow-hidden mb-4">
+                      <img
+                        src={previewUrl}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImage(null);
+                          setPreviewUrl(null);
+                        }}
+                        className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-50"
+                      >
+                        <svg
+                          className="w-5 h-5 text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                        id="image-upload"
+                      />
+                      <label
+                        htmlFor="image-upload"
+                        className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary transition-colors"
+                      >
+                        <div className="space-y-2 text-center">
+                          <Upload className="mx-auto w-8 h-8 text-gray-light" />
+                          <span className="text-gray-light text-sm">
+                            Нажмите или перетащите файл
+                          </span>
+                        </div>
+                      </label>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 font-semibold mb-2">
-                Номер дома
-              </label>
-              <input
-                type="text"
-                value={buildingNum}
-                onChange={(e) => setBuildingNum(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-              />
+
+            {/* Кнопка отправки */}
+            <div className="pt-4">
+              <button
+                type="submit"
+                className="w-full btn-primary text-lg font-medium"
+              >
+                Создать заказ · {service.price} ₽
+              </button>
             </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 font-semibold mb-2">
-                Корпус
-              </label>
-              <input
-                type="text"
-                value={building}
-                onChange={(e) => setBuilding(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 font-semibold mb-2">
-                Этаж
-              </label>
-              <input
-                type="text"
-                value={floor}
-                onChange={(e) => setFloor(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 font-semibold mb-2">
-                Квартира
-              </label>
-              <input
-                type="text"
-                value={apartment}
-                onChange={(e) => setApartment(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 font-semibold mb-2">
-                Комментарий
-              </label>
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Введите комментарий"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 font-semibold mb-2">
-                Фото обуви
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-              />
-            </div>
-            <button
-              type="submit"
-              className="px-5 py-3 text-lg tracking-wider text-white bg-custom-red rounded-full w-full"
-            >
-              Подтвердить заказ
-            </button>
+
+            {orderError && (
+              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-800">
+                  Произошла ошибка при создании заказа. Пожалуйста, попробуйте
+                  снова.
+                </p>
+              </div>
+            )}
           </form>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

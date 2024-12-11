@@ -5,27 +5,46 @@ import { FiShoppingCart, FiBell, FiUser, FiMenu, FiX } from "react-icons/fi";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
+import { Bell } from "lucide-react";
+import { useNotification } from "@/providers/notification-provider";
+import { GiRunningShoe } from "react-icons/gi";
 
 const NavBar: FC = () => {
   const { data: session } = useSession();
+  const { unreadCount } = useNotification();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
-  // Получаем количество непрочитанных уведомлений
+  // Получаем данные профиля
   useEffect(() => {
-    if (session?.accessToken) {
-      fetch("http://127.0.0.1:8000/api/notifications/unread-count/", {
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`,
-        },
-      })
-        .then((res) => res.json())
-        .then((data) => setUnreadCount(data.count))
-        .catch(console.error);
-    }
+    const fetchUserProfile = async () => {
+      if (session?.accessToken) {
+        try {
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/authentication/profile/`,
+            {
+              headers: {
+                Authorization: `Bearer ${session.accessToken}`,
+              },
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            setUserProfile(data);
+            console.log("User profile data:", data);
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+        }
+      }
+    };
+
+    fetchUserProfile();
   }, [session]);
 
   const toggleMobileMenu = () => {
@@ -60,93 +79,69 @@ const NavBar: FC = () => {
   }, [pathname]);
 
   return (
-    <nav className="bg-gray-100 py-5 px-5">
-      <div className="container mx-auto flex justify-between items-center">
-        <div className="flex items-center">
-          <Link href="/">
-            <img src="/logo2.png" alt="ShoeMaster Logo" className="h-10 mr-2" />
-          </Link>
-        </div>
-
-        {/* Ссылки для десктопа */}
-        <ul className="hidden md:flex space-x-6 text-gray-600">
-          <li>
-            <Link href="/orders" className="hover:text-gray-900">
-              Мои заказы
-            </Link>
-          </li>
-          <li>
-            <Link href="/sales" className="hover:text-gray-900">
-              Акции
-            </Link>
-          </li>
-          <li>
-            <Link href="/aboutus" className="hover:text-gray-900">
-              О нас
-            </Link>
-          </li>
-          <li>
-            <Link href="/contacts" className="hover:text-gray-900">
-              Контакты
-            </Link>
-          </li>
-        </ul>
-
-        {/* Иконки */}
-        <div className="hidden md:flex space-x-4 text-gray-600">
-          <Link href="#" className="hover:text-gray-900">
-            <FiShoppingCart className="h-6 w-6" />
-          </Link>
-          <Link href="/notifications" className="hover:text-gray-900 relative">
-            <FiBell className="h-6 w-6" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {unreadCount}
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-border-color">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-20">
+          {/* Логотип */}
+          <Link href="/" className="flex items-center space-x-2 group">
+            <GiRunningShoe className="w-8 h-8 text-primary group-hover:scale-110 transition-transform duration-200" />
+            <div className="flex flex-col">
+              <span className="text-xl font-semibold text-secondary tracking-tight">
+                Shoe Master
               </span>
-            )}
+              <span className="text-xs text-gray-light -mt-1">
+                Сервис ремонта обуви
+              </span>
+            </div>
           </Link>
-          <div className="relative" ref={userMenuRef}>
-            <button
-              onClick={toggleUserMenu}
-              className="hover:text-gray-900 focus:outline-none"
-            >
-              <FiUser className="h-6 w-6" />
-            </button>
-            {isUserMenuOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2">
-                <Link href="/account/profile">
-                  <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                    Мой профиль
-                  </span>
-                </Link>
-                <Link href="/account/settings">
-                  <span className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                    Настройки
-                  </span>
-                </Link>
-                <button
-                  onClick={() => signOut()}
-                  className="w-full text-left block px-4 py-2 text-gray-700 hover:bg-gray-100"
+
+          {/* Правая часть навбара */}
+          <div className="flex items-center gap-6">
+            {session ? (
+              <>
+                {/* Уведомления */}
+                <Link
+                  href="/notifications"
+                  className="relative p-2 rounded-full hover:bg-gray-lighter transition-colors"
                 >
-                  Выйти
-                </button>
-              </div>
+                  <Bell className="w-6 h-6 text-secondary" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-primary rounded-full">
+                      {unreadCount}
+                    </span>
+                  )}
+                </Link>
+
+                {/* Заказы */}
+                <Link
+                  href="/orders"
+                  className="text-secondary hover:text-primary transition-colors font-medium"
+                >
+                  Заказы
+                </Link>
+
+                {userProfile?.image ? (
+                  <Image
+                    src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${userProfile.image}`}
+                    alt="Фото профиля"
+                    width={32}
+                    height={32}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-secondary font-medium">
+                      {session?.user?.email?.[0].toUpperCase()}
+                    </span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <Link href="/login" className="btn-primary">
+                Войти
+              </Link>
             )}
           </div>
-        </div>
-
-        {/* Кнопка мобильного меню */}
-        <div className="md:hidden flex items-center">
-          <button
-            className="text-gray-700 focus:outline-none"
-            onClick={toggleMobileMenu}
-          >
-            {isMobileMenuOpen ? (
-              <FiX className="h-6 w-6" />
-            ) : (
-              <FiMenu className="h-6 w-6" />
-            )}
-          </button>
         </div>
       </div>
 
