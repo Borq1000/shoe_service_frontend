@@ -1,0 +1,59 @@
+import React from "react";
+import { FiTool, FiDroplet, FiRefreshCw } from "react-icons/fi";
+
+function ServiceHome() {
+const services = [
+{
+title: "Ремонт обуви",
+description:
+"Ремонт обуви включает в себя замену подошвы, устранение повреждений, замену фурнитуры и укрепление швов.",
+icon: FiTool,
+bgColor: "bg-blue-400",
+},
+{
+title: "Чистка обуви",
+description:
+"Профессиональная чистка обуви для восстановления блеска и свежести, устраняя пятна и грязь.",
+icon: FiDroplet,
+bgColor: "bg-yellow-400",
+},
+{
+title: "Комплексное обновление обуви",
+description:
+"Полное восстановление обуви, включающее ремонт, чистку и замену элементов для её обновления.",
+icon: FiRefreshCw,
+bgColor: "bg-green-500",
+},
+];
+
+return (
+<div className="container mx-auto py-12">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {services.map((service, index) => (
+        <div key={index}
+            className="relative p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+            <div className="flex flex-col items-center">
+                {/* Иконка услуги */}
+                <service.icon className={`text-4xl text-gray-700 mb-4 `} />
+                {/* Заголовок услуги */}
+                <h3 className="text-xl font-semibold text-gray-800 mb-2 text-center">
+                    {service.title}
+                </h3>
+                {/* Описание услуги */}
+                <p className="text-gray-600 text-center mb-4">
+                    {service.description}
+                </p>
+                {/* Кнопка заказа услуги */}
+                <button
+                    className="border-2 border-custom-red text-custom-red bg-white py-2 px-4 rounded-full transition duration-300 hover:bg-custom-red hover:text-white">
+                    Заказать услугу
+                </button>
+            </div>
+        </div>
+        ))}
+    </div>
+</div>
+);
+}
+
+export default ServiceHome;
